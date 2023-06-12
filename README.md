@@ -1,2 +1,2 @@
-# rust-graphql-juniper-lab
-Creating a GraphQL library with Juniper
+# Rust GraphQL with Juniper Lab
+Creating a GraphQL application in Rust with Juniper.
