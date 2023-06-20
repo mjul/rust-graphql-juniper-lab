@@ -1,5 +1,7 @@
 use std::any::{type_name, TypeId};
+use std::future::Future;
 use std::net::SocketAddr;
+use std::process::ExitCode;
 use std::sync::Arc;
 
 use axum::{Extension, extract, Router, routing::{get, post}};
@@ -9,15 +11,15 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use axum::body::Body;
-use axum::handler::Handler;
+use axum::handler::{Handler, Layered};
 use axum::http::Request;
 use axum::response::Html;
+use axum::routing::MethodRouter;
+use axum_macros::debug_handler;
 use futures::future;
-use juniper::{EmptyMutation, EmptySubscription, FieldError, FieldResult, graphql_object, graphql_subscription, graphql_value, GraphQLType, RootNode};
+use juniper::{DefaultScalarValue, EmptyMutation, EmptySubscription, FieldError, FieldResult, graphql_object, graphql_subscription, graphql_value, GraphQLSubscriptionType, GraphQLType, GraphQLTypeAsync, RootNode, ScalarValue};
 use juniper::http::{GraphQLBatchRequest, GraphQLBatchResponse, GraphQLRequest, GraphQLResponse};
 use juniper::http::graphiql::graphiql_source;
-
-
 
 #[derive(Clone, Copy, Debug)]
 pub struct Context;
@@ -63,15 +65,14 @@ impl<'a> IntoResponse for JuniperResponse<'a> {
 type AppSchema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
 
 
-
 #[tokio::main]
 async fn main() {
-    let tid = TypeId::of::<i32>();
-
     // build our GraphQL schema
     // TODO: add mutations and subscriptions
     let schema = Arc::new(AppSchema::new(Query, EmptyMutation::new(), EmptySubscription::new()));
     let context = Arc::new(Context {});
+
+    //let x = MethodRouter::new().post(graphql);
 
     // build our application
     let app = Router::new()
@@ -105,13 +106,16 @@ pub fn playground<'a>(
     || future::ready(html)
 }
 
-async fn graphql(extract::Json(request): extract::Json<GraphQLBatchRequest>) -> impl IntoResponse {
-    let schema = AppSchema::new(Query, EmptyMutation::new(), EmptySubscription::new());
-    let context = Context {};
-    let _v = request.execute(&schema, &context);
-    let r = GraphQLResponse::error(FieldError::new("foo_error", graphql_value!("foo")));
-    JuniperResponse(GraphQLBatchResponse::Single(r))
-}
-
 async fn juniper_subscriptions() {}
 
+#[debug_handler]
+async fn graphql(
+    Extension(context): Extension<Arc<Context>>,
+    Extension(schema): Extension<Arc<AppSchema>>,
+    Json(request): Json<GraphQLBatchRequest>,
+) -> impl IntoResponse
+{
+    let v = request.execute(&schema, &context).await;
+    let r = GraphQLResponse::error(FieldError::new("foox_error", graphql_value!("foo")));
+    JuniperResponse(GraphQLBatchResponse::Single(r))
+}
