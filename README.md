@@ -1,6 +1,32 @@
 # Rust GraphQL with Juniper Lab
 Creating a GraphQL application in Rust with Juniper.
 
+## Use the Web UI
+Open the web UI at http://localhost:3000/graphiql
+
+Try some queries with and without parameters:
+
+```graphql
+{
+    add(a:1,b:2)
+    hello
+}
+```
+Show the players and their instruments:
+```graphql
+{
+    players { id name instrument }
+}
+```
+
+Get player by id:
+```graphql
+{
+    player(id:"1000") { id name instrument }
+}
+```
+
+
 ## Debugging Axum Handlers
 
 The error messages are terrible when the handler signatures are not correct.
