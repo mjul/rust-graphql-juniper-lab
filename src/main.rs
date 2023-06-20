@@ -1,4 +1,6 @@
 use std::any::{type_name, TypeId};
+use std::borrow::Cow;
+use std::cell::OnceCell;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::process::ExitCode;
@@ -115,7 +117,6 @@ async fn graphql(
     Json(request): Json<GraphQLBatchRequest>,
 ) -> impl IntoResponse
 {
-    let v = request.execute(&schema, &context).await;
-    let r = GraphQLResponse::error(FieldError::new("foox_error", graphql_value!("foo")));
-    JuniperResponse(GraphQLBatchResponse::Single(r))
+    let response = request.execute_sync(&schema, &context);
+    JuniperResponse(response).into_response()
 }
