@@ -117,6 +117,8 @@ async fn graphql(
     Json(request): Json<GraphQLBatchRequest>,
 ) -> impl IntoResponse
 {
-    let response = request.execute_sync(&schema, &context);
+    let response = request.execute(&schema, &context).await;
+    // The `.into_response()` makes the borrows that go into response go out of scope, so that the response can be returned.
+    // Maybe there is a better way to do this.
     JuniperResponse(response).into_response()
 }

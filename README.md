@@ -46,3 +46,20 @@ error: `Json<_>` consumes the request body and thus must be the last argument to
 ```
 
 Much better!
+
+Now we can write the handler like this:
+
+```rust
+#[debug_handler]
+async fn graphql(
+    Extension(context): Extension<Arc<Context>>,
+    Extension(schema): Extension<Arc<AppSchema>>,
+    Json(request): Json<GraphQLBatchRequest>,
+) -> impl IntoResponse
+{
+    let response = request.execute(&schema, &context).await;
+    // The `.into_response()` makes the borrows that go into response go out of scope, so that the response can be returned. 
+    // Maybe there is a better way to do this.
+    JuniperResponse(response).into_response()
+}
+```
