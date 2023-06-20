@@ -13,9 +13,11 @@ use axum::handler::Handler;
 use axum::http::Request;
 use axum::response::Html;
 use futures::future;
-use juniper::{EmptyMutation, EmptySubscription, FieldError, FieldResult, graphql_object, graphql_subscription, GraphQLType, RootNode};
+use juniper::{EmptyMutation, EmptySubscription, FieldError, FieldResult, graphql_object, graphql_subscription, graphql_value, GraphQLType, RootNode};
 use juniper::http::{GraphQLBatchRequest, GraphQLBatchResponse, GraphQLRequest, GraphQLResponse};
 use juniper::http::graphiql::graphiql_source;
+
+
 
 #[derive(Clone, Copy, Debug)]
 pub struct Context;
@@ -60,6 +62,8 @@ impl<'a> IntoResponse for JuniperResponse<'a> {
 
 type AppSchema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
 
+
+
 #[tokio::main]
 async fn main() {
     let tid = TypeId::of::<i32>();
@@ -101,7 +105,13 @@ pub fn playground<'a>(
     || future::ready(html)
 }
 
-async fn graphql(extract::Json(request): extract::Json<GraphQLBatchRequest>) {}
+async fn graphql(extract::Json(request): extract::Json<GraphQLBatchRequest>) -> impl IntoResponse {
+    let schema = AppSchema::new(Query, EmptyMutation::new(), EmptySubscription::new());
+    let context = Context {};
+    let _v = request.execute(&schema, &context);
+    let r = GraphQLResponse::error(FieldError::new("foo_error", graphql_value!("foo")));
+    JuniperResponse(GraphQLBatchResponse::Single(r))
+}
 
 async fn juniper_subscriptions() {}
 
