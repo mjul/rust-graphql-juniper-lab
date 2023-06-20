@@ -1,25 +1,15 @@
-use std::any::{type_name, TypeId};
-use std::borrow::Cow;
-use std::cell::OnceCell;
-use std::future::Future;
-use std::net::SocketAddr;
-use std::process::ExitCode;
 use std::sync::Arc;
 
-use axum::{Extension, extract, Router, routing::{get, post}};
+use axum::{Extension, Router, routing::{get, post}};
 use axum::{
     http::StatusCode,
     Json,
     response::{IntoResponse, Response},
 };
-use axum::body::Body;
-use axum::handler::{Handler, Layered};
-use axum::http::Request;
 use axum::response::Html;
-use axum::routing::MethodRouter;
 use axum_macros::debug_handler;
 use futures::future;
-use juniper::{DefaultScalarValue, EmptyMutation, EmptySubscription, FieldError, FieldResult, graphql_object, graphql_subscription, graphql_value, GraphQLSubscriptionType, GraphQLType, GraphQLTypeAsync, RootNode, ScalarValue};
+use juniper::{ EmptyMutation, EmptySubscription, FieldError, FieldResult, graphql_object, graphql_subscription, graphql_value, RootNode };
 use juniper::http::{GraphQLBatchRequest, GraphQLBatchResponse, GraphQLRequest, GraphQLResponse};
 use juniper::http::graphiql::graphiql_source;
 
